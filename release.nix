@@ -86,11 +86,11 @@ rec {
           hetzner
           libcloud
           libvirt
-          azure-storage
-          azure-mgmt-compute
-          azure-mgmt-network
-          azure-mgmt-resource
-          azure-mgmt-storage
+          #azure-storage
+          #azure-mgmt-compute
+          #azure-mgmt-network
+          #azure-mgmt-resource
+          #azure-mgmt-storage
           adal
           # Go back to sqlite once Python 2.7.13 is released
           pysqlite

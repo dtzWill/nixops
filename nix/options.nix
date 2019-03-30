@@ -13,7 +13,7 @@ in
   imports =
     [ ./ec2.nix
       ./digital-ocean.nix
-      ./azure.nix
+      #./azure.nix
       ./route53.nix
       ./virtualbox.nix
       ./ssh-tunnel.nix
