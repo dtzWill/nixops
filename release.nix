@@ -1,4 +1,4 @@
-{ nixopsSrc ? { outPath = ./.; revCount = 0; shortRev = "abcdef"; rev = "HEAD"; }
+{ nixopsSrc ? builtins.fetchGit ./.
 , officialRelease ? false
 , nixpkgs ? <nixpkgs>
 }:
