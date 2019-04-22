@@ -5,7 +5,7 @@
 
 let
   pkgs = import nixpkgs { };
-  version = "1.6.1" + (if officialRelease then "" else "pre${toString nixopsSrc.revCount}_${nixopsSrc.shortRev}");
+  version = "1.7" + (if officialRelease then "" else "pre${toString nixopsSrc.revCount}_${nixopsSrc.shortRev}");
 
 in
 
@@ -39,6 +39,10 @@ rec {
           cp ${import ./doc/manual/resource.nix { revision = nixopsSrc.rev; module = ./nix + ("/" + fn + ".nix"); inherit nixpkgs; }} doc/manual/${fn}-options.xml
         '') [ "ebs-volume" "sns-topic" "sqs-queue" "ec2-keypair" "s3-bucket" "iam-role" "ssh-keypair" "ec2-security-group" "elastic-ip"
               "cloudwatch-log-group" "cloudwatch-log-stream" "elastic-file-system" "elastic-file-system-mount-target"
+              "route53-recordset" "route53-hosted-zone" "route53-health-check"
+              "vpc" "vpc-customer-gateway" "vpc-dhcp-options" "vpc-egress-only-internet-gateway" "vpc-endpoint"
+              "vpc-internet-gateway" "vpc-nat-gateway" "vpc-network-acl" "vpc-network-interface" "vpc-network-interface-attachment"
+              "vpc-route" "vpc-route-table" "vpc-route-table-association" "vpc-subnet"
               "gce-disk" "gce-image" "gce-forwarding-rule" "gce-http-health-check" "gce-network"
               "gce-static-ip" "gce-target-pool" "gse-bucket"
               "datadog-monitor" "datadog-timeboard" "datadog-screenboard"
@@ -86,17 +90,21 @@ rec {
           hetzner
           libcloud
           libvirt
-          #azure-storage
-          #azure-mgmt-compute
-          #azure-mgmt-network
-          #azure-mgmt-resource
-          #azure-mgmt-storage
           adal
           pkgs.sqlite
           datadog
           digital-ocean
           typing
-        ];
+        ] ++
+        #FIXME add back once https://github.com/NixOS/nixops/pull/1131
+        # is reverted.
+        (lib.optional false [
+          azure-storage
+          azure-mgmt-compute
+          azure-mgmt-network
+          azure-mgmt-resource
+          azure-mgmt-storage
+        ]);
 
       # For "nix-build --run-env".
       shellHook = ''

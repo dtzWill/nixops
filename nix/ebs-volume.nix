@@ -29,6 +29,15 @@ with lib;
       description = "The AWS Access Key ID.";
     };
 
+    volumeId = mkOption {
+      default = "";
+      example = "vol-abc123";
+      type = types.str;
+      description = ''
+        The volume id to be imported into the NixOps ebs-volume resource.
+      '';
+    };
+
     snapshot = mkOption {
       default = "";
       example = "snap-1cbda474";
@@ -44,7 +53,7 @@ with lib;
 
   config = {
     _type = "ebs-volume";
-    size = mkIf (config.snapshot != "") (mkDefault 0);
+    size = mkIf (config.snapshot != "" || config.volumeId != "") (mkDefault 0);
   };
 
 }

@@ -49,7 +49,16 @@ class ElasticIPState(nixops.resources.ResourceState):
 
     @property
     def resource_id(self):
-        return self.public_ipv4
+        return self.allocation_id
+
+    def get_physical_spec(self):
+        physical = {}
+        if self.public_ipv4:
+            physical['address'] = self.public_ipv4
+        return physical
+
+    def prefix_definition(self, attr):
+        return {('resources', 'elasticIPs'): attr}
 
     def connect(self, region):
         if self._client:
