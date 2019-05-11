@@ -218,6 +218,17 @@ in
       '';
     };
 
+    deployment.ec2.tenancy = mkOption {
+      default = "default";
+      type = types.enum [ "default" "dedicated" "host" ];
+      description = ''
+        The tenancy of the instance (if the instance is running in a VPC).
+        An instance with a tenancy of dedicated runs on single-tenant hardware.
+        An instance with host tenancy runs on a Dedicated Host, which is an
+        isolated server with configurations that you can control.
+      '';
+    };
+
     deployment.ec2.ebsBoot = mkOption {
       default = true;
       type = types.bool;
@@ -427,7 +438,7 @@ in
 
     deployment.ec2.spotInstanceRequestType = mkOption {
       default = "one-time";
-      type = types.str;
+      type = types.enum [ "one-time" "persistent" ];
       description = ''
         The type of the spot instance request. It can be either "one-time" or "persistent".
       '';
@@ -435,7 +446,7 @@ in
 
     deployment.ec2.spotInstanceInterruptionBehavior = mkOption {
       default = "terminate";
-      type = types.str;
+      type = types.enum [ "terminate" "stop" "hibernate" ];
       description = ''
         Whether to terminate, stop or hibernate the instance when it gets interrupted.
         For stop, spotInstanceRequestType must be set to "persistent".

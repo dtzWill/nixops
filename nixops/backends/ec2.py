@@ -44,6 +44,7 @@ class EC2Definition(MachineDefinition):
         self.access_key_id = config["ec2"]["accessKeyId"]
         self.region = config["ec2"]["region"]
         self.zone = config["ec2"]["zone"]
+        self.tenancy = config["ec2"]["tenancy"]
         self.ami = config["ec2"]["ami"]
         if self.ami == "":
             raise Exception("no AMI defined for EC2 machine ‘{0}’".format(self.name))
@@ -75,6 +76,7 @@ class EC2Definition(MachineDefinition):
         self.dns_ttl = config["route53"]["ttl"]
         self.route53_access_key_id = config["route53"]["accessKeyId"]
         self.route53_use_public_dns_name = config["route53"]["usePublicDNSName"]
+        self.route53_private = config["route53"]["private"]
 
     def show_type(self):
         return "{0} [{1}]".format(self.get_type(), self.region or self.zone or "???")
@@ -104,6 +106,7 @@ class EC2State(MachineState, nixops.resources.ec2_common.EC2CommonState):
     access_key_id = nixops.util.attr_property("ec2.accessKeyId", None)
     region = nixops.util.attr_property("ec2.region", None)
     zone = nixops.util.attr_property("ec2.zone", None)
+    tenancy = nixops.util.attr_property("ec2.tenancy", None)
     ami = nixops.util.attr_property("ec2.ami", None)
     instance_type = nixops.util.attr_property("ec2.instanceType", None)
     ebs_optimized = nixops.util.attr_property("ec2.ebsOptimized", None, bool)
@@ -150,6 +153,7 @@ class EC2State(MachineState, nixops.resources.ec2_common.EC2CommonState):
             self.elastic_ipv4 = None
             self.region = None
             self.zone = None
+            self.tenancy = None
             self.ami = None
             self.instance_type = None
             self.ebs_optimized = None
@@ -741,6 +745,8 @@ class EC2State(MachineState, nixops.resources.ec2_common.EC2CommonState):
         placement = dict(
             AvailabilityZone=zone or ""
         )
+        if defn.tenancy:
+            placement['Tenancy'] = defn.tenancy
 
         args['InstanceType'] = defn.instance_type
         args['ImageId'] = defn.ami
@@ -1019,6 +1025,7 @@ class EC2State(MachineState, nixops.resources.ec2_common.EC2CommonState):
                 self.security_groups = defn.security_groups
                 self.placement_group = defn.placement_group
                 self.zone = instance.placement
+                self.tenancy = defn.tenancy
                 self.instance_profile = defn.instance_profile
                 self.client_token = None
                 self.private_host_key = None
@@ -1277,8 +1284,21 @@ class EC2State(MachineState, nixops.resources.ec2_common.EC2CommonState):
         self.dns_ttl = defn.dns_ttl
         self.route53_access_key_id = defn.route53_access_key_id or nixops.ec2_utils.get_access_key_id()
         self.route53_use_public_dns_name = defn.route53_use_public_dns_name
-        record_type = 'CNAME' if self.route53_use_public_dns_name else 'A'
-        dns_value = self.public_dns_name if self.route53_use_public_dns_name else self.public_ipv4
+        self.route53_private = defn.route53_private
+
+        if self.route53_private:
+            if self.route53_use_public_dns_name:
+                raise Exception("Can not add record for ‘{0}’, because private CNAME records are not implemented in NixOps. You may choose to use an ‘A’ record instead by setting ‘usePublicDNSName = false’.".format(self.dns_hostname))
+
+            record_type = 'A'
+            dns_value = self.private_ipv4
+
+        else:
+            if not self.public_ipv4:
+                raise Exception("No public ipv4 address has been associated with ‘{0}’. If this record is intended for a public cloud host, make sure it is defined and its public IP address is known to NixOps. If this is record is intended for a private cloud, use ‘private = true’ to use the private IP adress instead.".format(self.dns_hostname))
+
+            record_type = 'CNAME' if self.route53_use_public_dns_name else 'A'
+            dns_value = self.public_dns_name if self.route53_use_public_dns_name else self.public_ipv4
 
         self.log('sending Route53 DNS: {0} {1} {2}'.format(self.dns_hostname, record_type, dns_value))
 
