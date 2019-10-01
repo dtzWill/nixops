@@ -125,8 +125,10 @@ in rec {
       meta.description = "Nix package for ${stdenv.system}";
     });
 
+  /*
   tests.none_backend = (import ./tests/none-backend.nix {
     nixops = build.x86_64-linux;
     system = "x86_64-linux";
   }).test;
+  */
 }
